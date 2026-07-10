@@ -18,20 +18,72 @@
       padding: 0;
       background-color: #f0f2f5;
       display: flex;
-      justify-content: center;
+      flex-direction: column;
       align-items: center;
       -webkit-print-color-adjust: exact;
       print-color-adjust: exact;
     }
+
+    /* Barra de ferramentas flutuante na tela (Não sai na impressão) */
+    .control-bar {
+      margin-top: 15px;
+      background: white;
+      padding: 10px 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+    .sync-btn {
+      background-color: #2563eb;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-family: 'Cabin', sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      transition: background 0.2s;
+    }
+    .sync-btn:hover {
+      background-color: #1d4ed8;
+    }
+
+    /* Estilização do seletor de semanas */
+    .seletor-container {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      color: #3d2411;
+    }
+    .seletor-semana {
+      font-family: 'Cabin', sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      padding: 6px 12px;
+      border-radius: 6px;
+      border: 1px solid #2563eb;
+      color: #3d2411;
+      background-color: white;
+      cursor: pointer;
+      outline: none;
+    }
+
     /* Dimensões rígidas da folha A4 */
     .a4-page {
       width: 210mm;
       height: 297mm;
       background-color: #ffffff;
-      padding:15mm 15mm 20mm 15mm;
+      padding: 15mm 15mm 20mm 15mm;
+      margin: 15px auto;
       display: flex;
       flex-direction: column;
       gap: 25px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.1);
     }
     /* Alinhamento do Título Principal com a linha preta abaixo */
     .title-container {
@@ -58,7 +110,6 @@
       position: relative;
       border: 0px solid rgba(0, 0, 0, 0.16);
       box-shadow: 5px 5px 8px 0px rgba(0, 0, 0, 0.3);
-       
     }
     /* Card 1: Informações de Cabeçalho */
     .card-header {
@@ -167,10 +218,22 @@
       border-radius: 4px;
     }
     
-    /* Configurações de Impressão (Esconde os botões e força o tamanho A4) */
+    /* Estado de carregamento */
+    .loading-msg {
+      text-align: center;
+      font-size: 16px;
+      color: #1a4f63;
+      padding: 10px;
+      font-weight: 500;
+    }
+
+    /* Configurações de Impressão */
     @media print {
       body {
         background-color: transparent;
+      }
+      .control-bar, .no-print {
+        display: none !important;
       }
       .a4-page {
         box-shadow: none;
@@ -178,13 +241,22 @@
         margin: 0;
         page-break-after: always;
       }
-      .no-print {
-        display: none !important;
-      }
     }
   </style>
 </head>
 <body>
+
+  <!-- Barra superior para controle em tela -->
+  <div class="control-bar no-print">
+    <button class="sync-btn" onclick="buscarDadosDaPlanilha()">🔄 Atualizar Planilha</button>
+    
+    <div class="seletor-container">
+      <span>📅 Mostrar a partir da:</span>
+      <select id="semana-select" class="seletor-semana" onchange="mudarSemanaInicial()">
+        <option value="">Carregando semanas...</option>
+      </select>
+    </div>
+  </div>
 
   <div class="a4-page">
     
@@ -203,139 +275,218 @@
     <!-- Card RECEBEREMOS (Azul) -->
     <div class="card card-receberemos">
       <div class="card-title" contenteditable="true">RECEBEREMOS</div>
-      
       <div id="container-receberemos">
-        <div class="schedule-item">
-          <div class="item-row">
-            <div contenteditable="true"><strong>Orador:</strong> nome do irmão</div>
-            <div contenteditable="true"><strong>Data:</strong> —</div>
-          </div>
-          <div class="theme-container">
-            <div class="item-theme" contenteditable="true">
-              <strong>Tema:</strong> <span class="theme-text-blue">—</span>
-            </div>
-            <button class="remove-btn no-print" onclick="this.closest('.schedule-item').remove()" title="Remover semana">✕</button>
-          </div>
-        </div>
-
-        <div class="schedule-item">
-          <div class="item-row">
-            <div contenteditable="true"><strong>Orador:</strong> nome do irmão</div>
-            <div contenteditable="true"><strong>Data:</strong> —</div>
-          </div>
-          <div class="theme-container">
-            <div class="item-theme" contenteditable="true">
-              <strong>Tema:</strong> <span class="theme-text-blue">—</span>
-            </div>
-            <button class="remove-btn no-print" onclick="this.closest('.schedule-item').remove()" title="Remover semana">✕</button>
-          </div>
-        </div>
-
-        <div class="schedule-item">
-          <div class="item-row">
-            <div contenteditable="true"><strong>Orador:</strong>  nome do irmão</div>
-            <div contenteditable="true"><strong>Data:</strong> —</div>
-          </div>
-          <div class="theme-container">
-            <div class="item-theme" contenteditable="true">
-              <strong>Tema:</strong> <span class="theme-text-blue">—</span>
-            </div>
-            <button class="remove-btn no-print" onclick="this.closest('.schedule-item').remove()" title="Remover semana">✕</button>
-          </div>
-        </div>
-
-        <div class="schedule-item">
-          <div class="item-row">
-            <div contenteditable="true"><strong>Orador:</strong> nome do irmão</div>
-            <div contenteditable="true"><strong>Data:</strong> —</div>
-          </div>
-          <div class="theme-container">
-            <div class="item-theme" contenteditable="true">
-              <strong>Tema:</strong> <span class="theme-text-blue">—</span>
-            </div>
-            <button class="remove-btn no-print" onclick="this.closest('.schedule-item').remove()" title="Remover semana">✕</button>
-          </div>
-        </div>
+        <div class="loading-msg">Carregando dados...</div>
       </div>
-      
-      <button class="add-btn no-print" onclick="adicionarSemana('container-receberemos', 'blue')">+ Adicionar Semana</button>
+      <button class="add-btn no-print" onclick="adicionarSemanaManual('container-receberemos', 'blue')">+ Adicionar Semana</button>
     </div>
 
     <!-- Card ENVIAREMOS (Salmão) -->
     <div class="card card-enviaremos">
       <div class="card-title" contenteditable="true">ENVIAREMOS</div>
-      
       <div id="container-enviaremos">
-        <div class="schedule-item">
-          <div class="item-row">
-            <div contenteditable="true"><strong>Orador:</strong> nome do irmão</div>
-            <div contenteditable="true"><strong>Data:</strong> —</div>
-          </div>
-          <div class="theme-container">
-            <div class="item-theme" contenteditable="true">
-              <strong>Tema:</strong> <span class="theme-text-red">—</span>
-            </div>
-            <button class="remove-btn no-print" onclick="this.closest('.schedule-item').remove()" title="Remover semana">✕</button>
-          </div>
-        </div>
-
-        <div class="schedule-item">
-          <div class="item-row">
-            <div contenteditable="true"><strong>Orador:</strong> nome do irmão</div>
-            <div contenteditable="true"><strong>Data:</strong> —</div>
-          </div>
-          <div class="theme-container">
-            <div class="item-theme" contenteditable="true">
-              <strong>Tema:</strong> <span class="theme-text-red">—</span>
-            </div>
-            <button class="remove-btn no-print" onclick="this.closest('.schedule-item').remove()" title="Remover semana">✕</button>
-          </div>
-        </div>
-
-        <div class="schedule-item">
-          <div class="item-row">
-            <div contenteditable="true"><strong>Orador:</strong> nome do irmão</div>
-            <div contenteditable="true"><strong>Data:</strong> —</div>
-          </div>
-          <div class="theme-container">
-            <div class="item-theme" contenteditable="true">
-              <strong>Tema:</strong> <span class="theme-text-red">—</span>
-            </div>
-            <button class="remove-btn no-print" onclick="this.closest('.schedule-item').remove()" title="Remover semana">✕</button>
-          </div>
-        </div>
-
-        <div class="schedule-item">
-          <div class="item-row">
-            <div contenteditable="true"><strong>Orador:</strong> nome do irmão</div>
-            <div contenteditable="true"><strong>Data:</strong> —</div>
-          </div>
-          <div class="theme-container">
-            <div class="item-theme" contenteditable="true">
-              <strong>Tema:</strong> <span class="theme-text-red">—</span>
-            </div>
-            <button class="remove-btn no-print" onclick="this.closest('.schedule-item').remove()" title="Remover semana">✕</button>
-          </div>
-        </div>
+        <div class="loading-msg">Carregando dados...</div>
       </div>
-      
-      <button class="add-btn no-print" onclick="adicionarSemana('container-enviaremos', 'red')" style="background-color: #b91c1c;">+ Adicionar Semana</button>
+      <button class="add-btn no-print" onclick="adicionarSemanaManual('container-enviaremos', 'red')", style="background-color: #b91c1c;">+ Adicionar Semana</button>
     </div>
 
   </div>
 
-  <!-- Script para adicionar dinamicamente novas semanas -->
   <script>
-    function adicionarSemana(containerId, tipoCor) {
+    // URL 1: Banco de dados das escalas semanais (CSV)
+    const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSBuS_Qe2LkVH7QEPbSvoFn50e7I71Waljbuk8b2UR1wxGkYZMoeEZUy7Moy1DF4pMfRlRsn0tyNDu4/pub?output=csv";
+    
+    // URL 2: Banco de dados com a lista de temas de esboços (TSV)
+    const TSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRGAcOIMZpt2HD2XMZWqEnV5QjF7322mxVRjI-s3hsGsSzAw6T45pGhCczn0tNzQUQeYcnQ4R3SCyAS/pub?gid=1453510933&single=true&output=tsv";
+
+    // ⚠️ MAPEAMENTO DAS COLUNAS: Ajuste os números abaixo se os dados aparecerem trocados!
+    const MAPA_COLUNAS = {
+      semana: 0,
+      oradorEnviaremos: 8,   // Coluna correspondente ao 'orador' (Enviaremos)
+      esbocoEnviaremos: 9,   // Coluna correspondente ao 'esboco' (Enviaremos)
+      oradorReceberemos: 10, // Coluna correspondente ao 'orador2' (Receberemos)
+      esbocoReceberemos: 11  // Coluna correspondente ao 'esboco2' (Receberemos)
+    };
+
+    // Armazenamento global de memória
+    let todasAsLinhasValidas = [];
+    let dicionarioEsbocos = {};
+
+    window.onload = buscarDadosDaPlanilha;
+
+    async function buscarDadosDaPlanilha() {
+      const seletor = document.getElementById('semana-select');
+      document.getElementById('container-receberemos').innerHTML = '<div class="loading-msg">Sincronizando bancos de dados...</div>';
+      document.getElementById('container-enviaremos').innerHTML = '<div class="loading-msg">Sincronizando bancos de dados...</div>';
+      seletor.innerHTML = '<option value="">Carregando...</option>';
+
+      try {
+        // 1. Carrega e processa a planilha de temas (TSV)
+        const respostaTSV = await fetch(TSV_URL);
+        if (!respostaTSV.ok) throw new Error("Erro ao acessar a lista de esboços.");
+        const textoTSV = await respostaTSV.text();
+        dicionarioEsbocos = processarTSV(textoTSV);
+
+        // 2. Carrega e processa a planilha de escalas principal (CSV)
+        const respostaCSV = await fetch(CSV_URL);
+        if (!respostaCSV.ok) throw new Error("Erro ao acessar a planilha principal.");
+        const textoCSV = await respostaCSV.text();
+        const linhasRaw = processarCSV(textoCSV);
+
+        todasAsLinhasValidas = [];
+
+        if (linhasRaw.length <= 1) {
+          document.getElementById('container-receberemos').innerHTML = '<div class="loading-msg">Nenhum dado encontrado.</div>';
+          document.getElementById('container-enviaremos').innerHTML = '<div class="loading-msg">Nenhum dado encontrado.</div>';
+          return;
+        }
+
+        // Separa linhas válidas com semanas descritas
+        for (let i = 1; i < linhasRaw.length; i++) {
+          const col = linhasRaw[i];
+          if (col && col.length > 0 && col[MAPA_COLUNAS.semana]) {
+            todasAsLinhasValidas.push(col);
+          }
+        }
+
+        // Popula o menu de escolha da semana
+        seletor.innerHTML = '';
+        todasAsLinhasValidas.forEach((col, index) => {
+          const opcao = document.createElement('option');
+          opcao.value = index;
+          opcao.textContent = "Semana: " + col[MAPA_COLUNAS.semana];
+          seletor.appendChild(opcao);
+        });
+
+        // Inicializa renderizando as 4 primeiras semanas
+        renderizarCardsIniciandoEm(0);
+
+      } catch (erro) {
+        console.error(erro);
+        const erroHTML = `<div class="loading-msg" style="color:red;">⚠️ Falha ao carregar dados: ${erro.message}</div>`;
+        document.getElementById('container-receberemos').innerHTML = erroHTML;
+        document.getElementById('container-enviaremos').innerHTML = erroHTML;
+      }
+    }
+
+    function mudarSemanaInicial() {
+      const seletor = document.getElementById('semana-select');
+      const indiceEscolhido = parseInt(seletor.value, 10) || 0;
+      renderizarCardsIniciandoEm(indiceEscolhido);
+    }
+
+    function renderizarCardsIniciandoEm(indiceInicial) {
+      const containerReceberemos = document.getElementById('container-receberemos');
+      const containerEnviaremos = document.getElementById('container-enviaremos');
+      
+      containerReceberemos.innerHTML = '';
+      containerEnviaremos.innerHTML = '';
+
+      let cardsExibidos = 0;
+
+      for (let i = indiceInicial; i < todasAsLinhasValidas.length; i++) {
+        if (cardsExibidos >= 4) break;
+
+        const col = todasAsLinhasValidas[i];
+        const dataSemana = col[MAPA_COLUNAS.semana] || "—";
+
+        // --- PROCESSAMENTO DO CARD RECEBEREMOS ---
+        const oradorRec = col[MAPA_COLUNAS.oradorReceberemos] || "—";
+        const numEsbocoRec = (col[MAPA_COLUNAS.esbocoReceberemos] || "").trim();
+        let temaCompletoRec = "—";
+        
+        if (numEsbocoRec) {
+          const temaEncontrado = dicionarioEsbocos[numEsbocoRec] || "Tema não localizado";
+          temaCompletoRec = `${temaEncontrado} (${numEsbocoRec})`;
+        }
+
+        const itemRec = document.createElement('div');
+        itemRec.className = 'schedule-item';
+        itemRec.innerHTML = `
+          <div class="item-row">
+            <div contenteditable="true"><strong>Orador:</strong> ${oradorRec}</div>
+            <div contenteditable="true"><strong>Data:</strong> ${dataSemana}</div>
+          </div>
+          <div class="theme-container">
+            <div class="item-theme" contenteditable="true">
+              <strong>Tema:</strong> <span class="theme-text-blue">${temaCompletoRec}</span>
+            </div>
+            <button class="remove-btn no-print" onclick="this.closest('.schedule-item').remove()" title="Remover semana">✕</button>
+          </div>
+        `;
+        containerReceberemos.appendChild(itemRec);
+
+        // --- PROCESSAMENTO DO CARD ENVIAREMOS ---
+        const oradorEnv = col[MAPA_COLUNAS.oradorEnviaremos] || "—";
+        const numEsbocoEnv = (col[MAPA_COLUNAS.esbocoEnviaremos] || "").trim();
+        let temaCompletoEnv = "—";
+
+        if (numEsbocoEnv) {
+          const temaEncontrado = dicionarioEsbocos[numEsbocoEnv] || "Tema não localizado";
+          temaCompletoEnv = `${temaEncontrado} (${numEsbocoEnv})`;
+        }
+
+        const itemEnv = document.createElement('div');
+        itemEnv.className = 'schedule-item';
+        itemEnv.innerHTML = `
+          <div class="item-row">
+            <div contenteditable="true"><strong>Orador:</strong> ${oradorEnv}</div>
+            <div contenteditable="true"><strong>Data:</strong> ${dataSemana}</div>
+          </div>
+          <div class="theme-container">
+            <div class="item-theme" contenteditable="true">
+              <strong>Tema:</strong> <span class="theme-text-red">${temaCompletoEnv}</span>
+            </div>
+            <button class="remove-btn no-print" onclick="this.closest('.schedule-item').remove()" title="Remover semana">✕</button>
+          </div>
+        `;
+        containerEnviaremos.appendChild(itemEnv);
+
+        cardsExibidos++;
+      }
+    }
+
+    // Processador especializado para arquivos TSV (Separados por Tabulação)
+    function processarTSV(texto) {
+      const linhas = texto.split(/\r?\n/);
+      const mapa = {};
+      linhas.forEach(linha => {
+        const colunas = linha.split('\t');
+        if (colunas.length >= 2) {
+          const numero = colunas[0].replace(/^"|"$/g, '').trim();
+          const tema = colunas[1].replace(/^"|"$/g, '').trim();
+          if (numero) {
+            mapa[numero] = tema;
+          }
+        }
+      });
+      return mapa;
+    }
+
+    // Processador inteligente para arquivos CSV
+    function processarCSV(texto) {
+      const linhas = texto.split(/\r?\n/);
+      const primeiraLinha = linhas[0] || "";
+      const divisor = (primeiraLinha.split(';').length > primeiraLinha.split(',').length) ? ';' : ',';
+
+      return linhas.map(linha => {
+        const regex = new RegExp(`${divisor}(?=(?:(?:[^"]*"){2})*[^"]*$)`);
+        return linha.split(regex).map(celula => 
+          celula ? celula.replace(/^"|"$/g, '').trim() : ""
+        );
+      });
+    }
+
+    // Função de retaguarda para inserção manual em caso de emergência
+    function adicionarSemanaManual(containerId, tipoCor) {
       const container = document.getElementById(containerId);
       const novaSemana = document.createElement('div');
       novaSemana.className = 'schedule-item';
-      
       const corClasse = tipoCor === 'blue' ? 'theme-text-blue' : 'theme-text-red';
       
       novaSemana.innerHTML = `
         <div class="item-row">
-          <div contenteditable="true"><strong>Orador:</strong> Novo Orador</div>
+          <div contenteditable="true"><strong>Orador:</strong> Nome do Irmão</div>
           <div contenteditable="true"><strong>Data:</strong> 00 de Mês</div>
         </div>
         <div class="theme-container">
@@ -345,7 +496,6 @@
           <button class="remove-btn no-print" onclick="this.closest('.schedule-item').remove()" title="Remover semana">✕</button>
         </div>
       `;
-      
       container.appendChild(novaSemana);
     }
   </script>
